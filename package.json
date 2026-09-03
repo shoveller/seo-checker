@@ -23,6 +23,7 @@
 		"zod": "^4.5.4"
 	},
 	"devDependencies": {
+		"@cloudflare/puppeteer": "^1.4.0",
 		"@cloudflare/vite-plugin": "^1.54.3",
 		"@types/node": "^24.13.3",
 		"@types/react": "^19.2.18",

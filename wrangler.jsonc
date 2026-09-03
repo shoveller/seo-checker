@@ -28,8 +28,7 @@
 		"required": ["API_SERVER_KEY"]
 	},
 	"browser": {
-		"binding": "BROWSER",
-		"remote": true
+		"binding": "BROWSER"
 	},
 	"worker_loaders": [{
 		"binding": "LOADER"
