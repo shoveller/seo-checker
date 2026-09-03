@@ -1,11 +1,12 @@
 import {AIChatAgent} from "@cloudflare/ai-chat";
 import {
-    convertToModelMessages,
-    createUIMessageStreamResponse, isLoopFinished, streamText, tool, toUIMessageStream
+    convertToModelMessages, createUIMessageStreamResponse, isLoopFinished, streamText, toUIMessageStream
 } from "ai";
 import {createOpenAICompatible} from "@ai-sdk/openai-compatible";
-import {z} from "zod";
 import puppeteer, {type Browser,type Page} from "@cloudflare/puppeteer";
+import {DynamicWorkerExecutor} from "@cloudflare/codemode";
+import {createCodeTool} from "@cloudflare/codemode/ai";
+import {createPuppeteerTools} from "./tools.ts";
 
 const createHermesModel = (apiKey: string) => {
     const model = createOpenAICompatible({
@@ -16,6 +17,16 @@ const createHermesModel = (apiKey: string) => {
 
     return model('openai/gpt-oss-120b')
 }
+
+const SEO_AUDIT_SYSTEM_PROMPT = `You are an SEO audit agent with access to a real browser through the codemode tool.
+
+When the user provides a URL or asks for an SEO audit:
+1. Use codemode to compose the browser tools. Navigate to the URL, inspect SEO, capture a screenshot, and close the browser in a finally block.
+2. Return the inspectSeo result and screenshot together from the generated code. Use the score returned by inspectSeo; never calculate or change the score yourself.
+3. After the tool finishes, answer in Korean with the score out of 100, the number of passed checks, every failed check and its actual value, and a concrete fix for each failure.
+4. Do not invent values that are absent from the tool result. Mention that the captured screenshot is displayed with the tool result.
+
+If an audit is requested without a URL, ask the user for an http:// or https:// URL.`
 
 export class BrowserAgent extends AIChatAgent<Env> {
     browser?: Browser
@@ -44,29 +55,33 @@ export class BrowserAgent extends AIChatAgent<Env> {
 
     async onChatMessage() {
         const model = createHermesModel(this.env.API_SERVER_KEY)
+        const codemode = createCodeTool({
+            tools: [{
+                name: "browser",
+                tools: createPuppeteerTools({
+                    getPage: () => this.getPage(),
+                    closeBrowser: () => this.closeBrowser(),
+                    saveScreenshot: async data => {
+                        const key = `${crypto.randomUUID()}.png`
+                        await this.env.SEO_SCREENSHOTS.put(key, data, {
+                            httpMetadata: {
+                                contentType: 'image/png',
+                                cacheControl: 'private, max-age=3600'
+                            }
+                        })
+
+                        return `/api/screenshots/${key}`
+                    }
+                })
+            }],
+            executor: new DynamicWorkerExecutor({loader: this.env.LOADER})
+        })
 
         const result = streamText({
             model,
+            system: SEO_AUDIT_SYSTEM_PROMPT,
             messages: await convertToModelMessages(this.messages),
-            tools: {
-                navigate: tool({
-                    description: '웹 페이지로 이동',
-                    inputSchema: z.object({ url: z.string().meta({ description: 'https:// 로 시작하는 웹페이지 주소' }) }),
-                    execute: async ({ url }) => {
-                        const page = await this.getPage()
-                        await page.goto(url)
-                        return { ok: true, title: await page.title() }
-                    }
-                }),
-                closeBrowser: tool({
-                    description: "Close the browser session",
-                    inputSchema: z.object({}),
-                    execute: async () => {
-                        await this.closeBrowser();
-                        return { ok: true };
-                    },
-                }),
-            },
+            tools: {codemode},
             stopWhen: isLoopFinished()
         })
 

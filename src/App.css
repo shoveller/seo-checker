@@ -246,6 +246,26 @@
   overflow-wrap: anywhere;
 }
 
+.audit-screenshot {
+  margin: 0;
+}
+
+.audit-screenshot img {
+  display: block;
+  width: 100%;
+  max-height: 460px;
+  object-fit: contain;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+}
+
+.audit-screenshot figcaption {
+  margin-top: 6px;
+  color: var(--text);
+  font-size: 10px;
+}
+
 .tool-denied {
   margin: 10px 0 0;
   color: #d64545;

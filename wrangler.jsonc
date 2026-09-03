@@ -32,6 +32,10 @@
 	},
 	"worker_loaders": [{
 		"binding": "LOADER"
+	}],
+	"r2_buckets": [{
+		"binding": "SEO_SCREENSHOTS",
+		"bucket_name": "seo-checker-screenshots"
 	}]
 	/**
 	 * Smart Placement

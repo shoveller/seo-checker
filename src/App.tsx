@@ -25,6 +25,27 @@ function formatToolValue(value: unknown) {
   }
 }
 
+type ScreenshotResult = {
+  path: string
+}
+
+function findScreenshot(value: unknown): ScreenshotResult | null {
+  if (!value || typeof value !== 'object') return null
+
+  if ('path' in value
+    && typeof value.path === 'string'
+    && value.path.startsWith('/api/screenshots/')) {
+    return {path: value.path}
+  }
+
+  for (const nestedValue of Object.values(value)) {
+    const screenshot = findScreenshot(nestedValue)
+    if (screenshot) return screenshot
+  }
+
+  return null
+}
+
 function App() {
   const agent = useAgent({ agent: 'BrowserAgent' })
   const { sendMessage, messages, status, error, clearHistory } = useAgentChat({ agent })
@@ -53,7 +74,7 @@ function App() {
       <header className="chat-header">
         <div>
           <span className="chat-eyebrow">SEO CHECKER</span>
-          <h1>Browser Agent</h1>
+          <h1>SEO Agent</h1>
         </div>
         <div className={`chat-status chat-status--${status}`}>
           <span aria-hidden="true" />
@@ -85,6 +106,10 @@ function App() {
                 }
 
                 if (isToolUIPart(part)) {
+                  const screenshot = part.state === 'output-available'
+                    ? findScreenshot(part.output)
+                    : null
+
                   return (
                     <details className="tool-call" data-state={part.state} key={part.toolCallId}>
                       <summary>
@@ -104,6 +129,15 @@ function App() {
                             <span>OUTPUT</span>
                             <pre>{formatToolValue(part.output)}</pre>
                           </div>
+                        )}
+                        {screenshot && (
+                          <figure className="audit-screenshot">
+                            <img
+                              src={screenshot.path}
+                              alt="SEO 감사를 수행한 웹페이지 스크린샷"
+                            />
+                            <figcaption>감사 시점의 페이지 화면</figcaption>
+                          </figure>
                         )}
                         {part.state === 'output-error' && (
                           <div>
