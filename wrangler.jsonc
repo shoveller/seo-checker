@@ -13,7 +13,17 @@
 	"observability": {
 		"enabled": true
 	},
-	"upload_source_maps": true
+	"upload_source_maps": true,
+	"durable_objects": {
+		"bindings": [{
+			"name": "BrowserAgent",
+			"class_name": "BrowserAgent"
+		}]
+	},
+	"migrations": [{
+		"tag": "v1",
+		"new_sqlite_classes": ["BrowserAgent"]
+	}]
 	/**
 	 * Smart Placement
 	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
