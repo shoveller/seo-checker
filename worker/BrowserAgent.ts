@@ -1,9 +1,10 @@
 import {AIChatAgent} from "@cloudflare/ai-chat";
 import {
     convertToModelMessages,
-    createUIMessageStreamResponse, streamText, toUIMessageStream
+    createUIMessageStreamResponse, isLoopFinished, streamText, toUIMessageStream
 } from "ai";
 import {createOpenAICompatible} from "@ai-sdk/openai-compatible";
+import {createBrowserTools} from "agents/browser/ai";
 
 const createHermesModel = (apiKey: string) => {
     const model = createOpenAICompatible({
@@ -18,9 +19,17 @@ const createHermesModel = (apiKey: string) => {
 export class BrowserAgent extends AIChatAgent<Env> {
     async onChatMessage() {
         const model = createHermesModel(this.env.API_SERVER_KEY)
+        const browserTool = createBrowserTools({
+            browser: this.env.BROWSER,
+            loader: this.env.LOADER
+        })
         const result = streamText({
             model,
-            messages: await convertToModelMessages(this.messages)
+            messages: await convertToModelMessages(this.messages),
+            tools: {
+                ...browserTool
+            },
+            stopWhen: isLoopFinished()
         })
 
         return createUIMessageStreamResponse({

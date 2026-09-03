@@ -23,6 +23,16 @@
 	"migrations": [{
 		"tag": "v1",
 		"new_sqlite_classes": ["BrowserAgent"]
+	}],
+	"secrets": {
+		"required": ["API_SERVER_KEY"]
+	},
+	"browser": {
+		"binding": "BROWSER",
+		"remote": true
+	},
+	"worker_loaders": [{
+		"binding": "LOADER"
 	}]
 	/**
 	 * Smart Placement
