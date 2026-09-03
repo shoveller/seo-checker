@@ -1,20 +1,30 @@
 import {AIChatAgent} from "@cloudflare/ai-chat";
 import {
-    createUIMessageStream,
-    createUIMessageStreamResponse
+    convertToModelMessages,
+    createUIMessageStreamResponse, streamText, toUIMessageStream
 } from "ai";
+import {createOpenAICompatible} from "@ai-sdk/openai-compatible";
+
+const createHermesModel = (apiKey: string) => {
+    const model = createOpenAICompatible({
+        name: 'hermes',
+        baseURL: 'https://hermes-proxy.apzip.space/v1',
+        apiKey
+    })
+
+    return model('openai/gpt-oss-120b')
+}
 
 export class BrowserAgent extends AIChatAgent<Env> {
     async onChatMessage() {
-        console.log('hel')
+        const model = createHermesModel(this.env.API_SERVER_KEY)
+        const result = streamText({
+            model,
+            messages: await convertToModelMessages(this.messages)
+        })
+
         return createUIMessageStreamResponse({
-            stream: createUIMessageStream({
-                execute({ writer }){
-                    writer.write({ type: 'text-start', id: 'answer' })
-                    writer.write({ type: 'text-delta', id: 'answer', delta: 'hello' })
-                    writer.write({ type: 'text-end', id: 'answer' })
-                }
-            })
+            stream: toUIMessageStream({ stream: result.stream })
         })
     }
 }
