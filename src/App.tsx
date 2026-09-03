@@ -27,7 +27,7 @@ function formatToolValue(value: unknown) {
 
 function App() {
   const agent = useAgent({ agent: 'BrowserAgent' })
-  const { sendMessage, messages, status, error } = useAgentChat({ agent })
+  const { sendMessage, messages, status, error, clearHistory } = useAgentChat({ agent })
   const [input, setInput] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const isBusy = status === 'submitted' || status === 'streaming'
@@ -147,6 +147,9 @@ function App() {
         />
         <button type="submit" disabled={!input.trim() || isBusy}>
           {isBusy ? '진행 중' : '보내기'}
+        </button>
+        <button type="reset" onClick={clearHistory}>
+          새로운 세션 시작하기
         </button>
       </form>
     </main>
