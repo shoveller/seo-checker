@@ -10,12 +10,12 @@ import {createPuppeteerTools} from "./tools.ts";
 
 const createHermesModel = (apiKey: string) => {
     const model = createOpenAICompatible({
-        name: 'hermes',
-        baseURL: 'https://hermes-proxy.apzip.space/v1',
+        name: 'proxy',
+        baseURL: 'https://cli-proxy.illuwa.click/v1',
         apiKey
     })
 
-    return model('openai/gpt-oss-120b')
+    return model('gemini-3.6-flash-high')
 }
 
 const SEO_AUDIT_SYSTEM_PROMPT = `You are an SEO audit agent with access to a real browser through the codemode tool.
@@ -54,7 +54,7 @@ export class BrowserAgent extends AIChatAgent<Env> {
     }
 
     async onChatMessage() {
-        const model = createHermesModel(this.env.API_SERVER_KEY)
+        const model = createHermesModel('adee3c074d3e44a28d917a3d3131a3f16734233ca1286c50ec44a61c250a2fde')
         const codemode = createCodeTool({
             tools: [{
                 name: "browser",
