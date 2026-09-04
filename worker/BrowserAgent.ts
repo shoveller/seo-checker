@@ -54,7 +54,7 @@ export class BrowserAgent extends AIChatAgent<Env> {
     }
 
     async onChatMessage() {
-        const model = createHermesModel('adee3c074d3e44a28d917a3d3131a3f16734233ca1286c50ec44a61c250a2fde')
+        const model = createHermesModel(this.env.API_SERVER_KEY)
         const codemode = createCodeTool({
             tools: [{
                 name: "browser",
